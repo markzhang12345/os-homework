@@ -8,7 +8,7 @@ sem_t sem;
 void* thread(void*) {
     int i;
     for (i = 0; i < 1000000; i++) {
-        sem_wait(&sem);  // 等待信号量
+        sem_wait(&sem);  // 减少信号量
         sum++;
         sem_post(&sem);  // 释放信号量
     }
