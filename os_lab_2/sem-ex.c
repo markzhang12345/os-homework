@@ -8,11 +8,13 @@ sem_t sem;
 void* thread(void*) {
     int i;
     for (i = 0; i < 1000000; i++) {
-        sem_wait(&sem);
+        sem_wait(&sem);  // 等待信号量
         sum++;
-        sem_post(&sem);
+        sem_post(&sem);  // 释放信号量
     }
 }
+
+// 使用信号量
 
 int main(void) {
     pthread_t tid1, tid2;
