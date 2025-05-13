@@ -1,6 +1,6 @@
 # 第一次上机报告
 
-## 2.1 熟悉Linux环境下pthread编程，完成示例代码的编译与执行
+## 2.1 熟悉 Linux 环境下 pthread 编程，完成示例代码的编译与执行
 
 ### nosync-ex.c
 
@@ -130,7 +130,7 @@ int main(void) {
 
 这个脚本使用信号量控制变量 sum 的使用，通过`sem_wait(&sem)`占用信号量，控制另一个线程的访问，使用结束后再使用`sem_post(&sem)`接触占用。
 
-## 2.2 基于示例中涉及到的线程同步API，实现⽣产者消费者问题
+## 2.2 基于示例中涉及到的线程同步 API，实现⽣产者消费者问题
 
 在`test.c`中编写如下代码:
 
@@ -231,15 +231,15 @@ int main() {
 
 ### 3.2 pthread-ex03
 
-这段代码创建了两个线程：thread线程尝试返回变量i的值 (42)，thread2 线程将变量 i 修改为 0 并返回 31，主线程先等待 thread 结束并获取其返回值替换i，然后等待 thread2 结束，最后打印i的值（实际输出取决于线程执行顺序，可能是 42 或 31 ）。
+这段代码创建了两个线程：thread 线程尝试返回变量 i 的值 (42)，thread2 线程将变量 i 修改为 0 并返回 31，主线程先等待 thread 结束并获取其返回值替换 i，然后等待 thread2 结束，最后打印 i 的值（实际输出取决于线程执行顺序，可能是 42 或 31 ）。
 
 ### 3.2 pthread-ex04
 
-这段代码创建了一个线程，该线程将自身设置为分离状态 (detached) 后退出并返回值 42，由于分离状态的线程资源会自动回收且无法被  join ，所以主线程的 pthread_join 调用会失败，i 的值不会被更新为42，最终打印的可能仍是初始值0。
+这段代码创建了一个线程，该线程将自身设置为分离状态 (detached) 后退出并返回值 42，由于分离状态的线程资源会自动回收且无法被 join ，所以主线程的 pthread_join 调用会失败，i 的值不会被更新为 42，最终打印的可能仍是初始值 0。
 
 ### 3.2 pthread-ex05
 
-这段代码创建了两个线程：thread2 线程将全局变量i修改为 31，thread 线程打印全局变量 i 的值，由于线程创建顺序和执行时机的不确定性，输出可能是 42（如果 thread 先于 thread2 执行）或 31（如果 thread2 先于 thread 执行）。
+这段代码创建了两个线程：thread2 线程将全局变量 i 修改为 31，thread 线程打印全局变量 i 的值，由于线程创建顺序和执行时机的不确定性，输出可能是 42（如果 thread 先于 thread2 执行）或 31（如果 thread2 先于 thread 执行）。
 
 ### 3.2 pthread-ex06
 
@@ -247,7 +247,7 @@ int main() {
 
 ### 3.2 pthread-ex07
 
-这段代码循环创建两个线程，每个线程共享同一个变量 i 的地址，由于线程执行和循环迭代的速度不确定，当线程实际访问变量i时，其值可能已经改变，导致可能输出 Thread 1 两次，或者 Thread 0 和 Thread 1 ，甚至 Thread 2。
+这段代码循环创建两个线程，每个线程共享同一个变量 i 的地址，由于线程执行和循环迭代的速度不确定，当线程实际访问变量 i 时，其值可能已经改变，导致可能输出 Thread 1 两次，或者 Thread 0 和 Thread 1 ，甚至 Thread 2。
 
 ## 解决理发师问题
 
@@ -341,3 +341,12 @@ int main() {
 
 ## Git 记录
 
+运行命令`git log`，结果如下:
+
+![](https://github.com/markzhang12345/GitHubImage/blob/main/os_lab_2/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE%202025-05-13%20222151.png?raw=true)
+
+可视化界面如下:
+
+![](https://github.com/markzhang12345/GitHubImage/blob/main/os_lab_2/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE%202025-05-13%20222328.png?raw=true)
+
+作业仓库地址为[markzhang12345/os-homework: 大连理工大学操作系统课程作业](https://github.com/markzhang12345/os-homework/tree/main)
