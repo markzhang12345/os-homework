@@ -31,8 +31,7 @@ void* consumer(void* arg) {
 
         pthread_mutex_lock(&mutex);
 
-        int old_sum = sum;
-        sum = 0;
+        sum--;
         printf("消费者: 消费数据, sum = %d\n", sum);
 
         pthread_mutex_unlock(&mutex);
