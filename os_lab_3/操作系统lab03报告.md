@@ -338,3 +338,9 @@ int main(int argc, char* argv[]) {
 运行结果如下:
 
 ![](https://github.com/markzhang12345/GitHubImage/blob/main/os_lab_3/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE%202025-05-20%20193223.png?raw=true)
+
+## Git 记录
+
+![](https://github.com/markzhang12345/GitHubImage/blob/main/os_lab_3/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE%202025-05-20%20193653.png?raw=true)
+
+[os-homework/os_lab_3 at main · markzhang12345/os-homework](https://github.com/markzhang12345/os-homework/tree/main/os_lab_3)
