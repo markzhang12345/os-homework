@@ -1,84 +1,78 @@
+# 第四次上机报告(lab_05)
+
+## 运行示例代码
+
+将完整示例代码写入对应脚本，代码如下
+
+**vrmp.h**
+
+```c
+#include <malloc.h>
+#include <iomanip>
+#include <iostream>
+
+using namespace std;
+
+class Replace {
+   public:
+    Replace();
+    ~Replace();
+    void InitSpace(char* MethodName);  // 初始化页号记录
+    void Report(void);                 // 报告算法执行情况
+    void Fifo(void);                   // 先进先出算法
+    void Lru(void);                    // 最近最旧未用算法
+    void Clock(void);                  // 时钟(二次机会)置换算法
+    void Eclock(void);                 // 增强二次机会置换算法
+    void Lfu(void);                    // 最不经常使用置换算法
+    void Mfu(void);                    // 最经常使用置换算法
+   private:
+    int* ReferencePage;  // 存放要访问到的页号
+    int* EliminatePage;  // 存放淘汰页号
+    int* PageFrames;     // 存放当前正在实存中的页号
+    int PageNumber;      // 访问页数
+    int FrameNumber;     // 实存帧数
+    int FaultNumber;     // 失败页数
+};
+```
+
+
+
+**vmrp.cc**
+
+```c
 #include "vmrp.h"
 
-// PageInfo 结构体实现
-PageInfo::PageInfo() : pageNum(-1), referenced(false), modified(false) {}
-
-PageInfo::PageInfo(int num) : pageNum(num), referenced(true), modified(false) {}
-
-// Replace 类构造函数
 Replace::Replace() {
     int i;
-
-    // 随机生成
-    int maxPage;
+    // 设定总得访问页数,并分配相应的引用页号和淘汰页号记录数组空间
     cout << "Please input page numbers:";
     cin >> PageNumber;
-    cout << "the max page ";
-    cin >> maxPage;
-
-    ReferencePage = new int[PageNumber];
-    GenerateRandomPages(PageNumber, maxPage);
-
-    cout << "reference page string:";
+    ReferencePage = new int[sizeof(int) * PageNumber];
+    EliminatePage = new int[sizeof(int) * PageNumber];
+    // 输入引用页号序列(页面走向),初始化引用页数组
+    cout << "Please input reference page string:";
     for (i = 0; i < PageNumber; i++)
-        cout << ReferencePage[i] << " ";
-    cout << endl;
-
-    EliminatePage = new int[PageNumber];
-
+        cin >> ReferencePage[i];  // 引用页暂存引用数组
+    // 设定内存实页数(帧数),并分配相应的实页号记录数组空间(页号栈)
     cout << "Please input page frames:";
     cin >> FrameNumber;
-    PageFrames = new int[FrameNumber];
-    PageFrequency = new int[FrameNumber];
-    EnhancedFrames.resize(FrameNumber);
-    clockPointer = 0;
+    PageFrames = new int[sizeof(int) * FrameNumber];
 }
 
-// Replace 类析构函数
-Replace::~Replace() {
-    delete[] ReferencePage;
-    delete[] EliminatePage;
-    delete[] PageFrames;
-    delete[] PageFrequency;
-}
+Replace::~Replace() {}
 
-// 随机生成页面引用序列
-void Replace::GenerateRandomPages(int pageCount, int maxPage) {
-    srand(time(nullptr));
-    for (int i = 0; i < pageCount; i++) {
-        ReferencePage[i] = rand() % maxPage + 1;
-    }
-}
-
-// 设置页面序列
-void Replace::SetPageSequence(vector<int>& pages) {
-    if (ReferencePage)
-        delete[] ReferencePage;
-    PageNumber = pages.size();
-    ReferencePage = new int[PageNumber];
-    for (int i = 0; i < PageNumber; i++) {
-        ReferencePage[i] = pages[i];
-    }
-}
-
-// 初始化空间
-void Replace::InitSpace(const char* MethodName) {
+void Replace::InitSpace(char* MethodName) {
     int i;
     cout << endl << MethodName << endl;
     FaultNumber = 0;
-    clockPointer = 0;
-
+    // 引用还未开始,-1表示无引用页
     for (i = 0; i < PageNumber; i++)
         EliminatePage[i] = -1;
-
-    for (i = 0; i < FrameNumber; i++) {
+    for (i = 0; i < FrameNumber; i++)
         PageFrames[i] = -1;
-        PageFrequency[i] = 0;
-        EnhancedFrames[i] = PageInfo();
-    }
 }
 
-// 报告算法执行情况
+// 分析统计选择的算法对于当前输入的页面走向的性能
 void Replace::Report(void) {
     // 报告淘汰页顺序
     cout << endl << "Eliminate page:";
@@ -90,18 +84,17 @@ void Replace::Report(void) {
     cout << "Rate of page faults=" << 100 * (float)FaultNumber / (float)PageNumber << "%" << endl;
 }
 
-// LRU 算法实现
+// 最近最旧未用置换算法
 void Replace::Lru(void) {
     int i, j, k, l, next;
     InitSpace("LRU");
-
+    // 循环装入引用页
     for (k = 0, l = 0; k < PageNumber; k++) {
         next = ReferencePage[k];
-
-        // 检查页面是否已在内存中
+        // 检测引用页当前是否已在实存
         for (i = 0; i < FrameNumber; i++) {
             if (next == PageFrames[i]) {
-                // 移到栈顶
+                // 引用页已在实存将其调整到页记录栈顶
                 next = PageFrames[i];
                 for (j = i; j > 0; j--)
                     PageFrames[j] = PageFrames[j - 1];
@@ -109,26 +102,27 @@ void Replace::Lru(void) {
                 break;
             }
         }
-
-        if (i < FrameNumber) {
-            // 页面命中
+        if (PageFrames[0] == next) {
+            // 如果引用页已放栈顶，则为不缺页，报告当前内存页号
             for (j = 0; j < FrameNumber; j++)
                 if (PageFrames[j] >= 0)
                     cout << PageFrames[j] << " ";
             cout << endl;
+            continue;  // 继续装入下一页
         } else {
-            // 页面缺失
+            // 如果引用页还未放栈顶,则为缺页,缺页数加 1
             FaultNumber++;
+            // 栈底页号记入淘汰页数组中
             EliminatePage[l] = PageFrames[FrameNumber - 1];
-
+            // 向下压栈
             for (j = FrameNumber - 1; j > 0; j--)
                 PageFrames[j] = PageFrames[j - 1];
-            PageFrames[0] = next;
-
+            PageFrames[0] = next;  // 引用页放栈顶
+            // 报告当前实存中页号
             for (j = 0; j < FrameNumber; j++)
                 if (PageFrames[j] >= 0)
                     cout << PageFrames[j] << " ";
-
+            // 报告当前淘汰的页号
             if (EliminatePage[l] >= 0)
                 cout << "->" << EliminatePage[l++] << endl;
             else
@@ -138,45 +132,70 @@ void Replace::Lru(void) {
     Report();
 }
 
-// FIFO 算法实现
+// 先进先出置换算法
 void Replace::Fifo(void) {
     int i, j, k, l, next;
     InitSpace("FIFO");
-
+    // 循环装入引用页
     for (k = 0, j = l = 0; k < PageNumber; k++) {
         next = ReferencePage[k];
-
-        // 检查页面是否已在内存中
+        // 如果引用页已在实存中，报告实存页号
         for (i = 0; i < FrameNumber; i++)
             if (next == PageFrames[i])
                 break;
-
         if (i < FrameNumber) {
-            // 页面命中
             for (i = 0; i < FrameNumber; i++)
-                if (PageFrames[i] >= 0)
-                    cout << PageFrames[i] << " ";
+                cout << PageFrames[i] << " ";
             cout << endl;
-        } else {
-            // 页面缺失
-            FaultNumber++;
-            EliminatePage[l] = PageFrames[j];
-            PageFrames[j] = next;
-            j = (j + 1) % FrameNumber;
-
-            for (i = 0; i < FrameNumber; i++)
-                if (PageFrames[i] >= 0)
-                    cout << PageFrames[i] << " ";
-
-            if (EliminatePage[l] >= 0)
-                cout << "->" << EliminatePage[l++] << endl;
-            else
-                cout << endl;
+            continue;  // 继续引用下一页
         }
+        // 引用页不在实存中，缺页数加1
+        FaultNumber++;
+        EliminatePage[l] = PageFrames[j];  // 最先入页号记入淘汰页数组
+        PageFrames[j] = next;              // 引用页号放最先入页号处
+        j = (j + 1) % FrameNumber;         // 最先入页号循环下移
+        // 报告当前实存页号和淘汰页号
+        for (i = 0; i < FrameNumber; i++)
+            if (PageFrames[i] >= 0)
+                cout << PageFrames[i] << " ";
+        if (EliminatePage[l] >= 0)
+            cout << "->" << EliminatePage[l++] << endl;
+        else
+            cout << endl;
     }
     Report();
 }
 
+// 未实现的其他页置换算法入口
+void Replace::Clock(void) {}
+void Replace::Eclock(void) {}
+void Replace::Lfu(void) {}
+void Replace::Mfu(void) {}
+
+int main(int argc, char* argv[]) {
+    Replace* vmpr = new Replace();
+    vmpr->Lru();
+    vmpr->Fifo();
+    return 0;
+}
+```
+
+编译运行后，得到结果如下：
+
+![](https://github.com/markzhang12345/GitHubImage/blob/main/os_lab_5/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE%202025-06-03%20201225.png?raw=true)
+
+## 补全缺失算法
+
+有如下算法需要补全
+
+- void Replace::Clock(void) {}
+- void Replace::Eclock(void) {}
+- void Replace::Lfu(void) {}
+- void Replace::Mfu(void) {}
+
+补全代码如下：
+
+```c
 // CLOCK 算法实现
 void Replace::Clock(void) {
     int i, k, l, next;
@@ -463,64 +482,120 @@ void Replace::Mfu(void) {
     }
     Report();
 }
+```
 
-// 比较所有算法性能
-void Replace::CompareAlgorithms(void) {
-    cout << string(45, '-') << endl;
+![](https://github.com/markzhang12345/GitHubImage/blob/main/os_lab_5/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE%202025-06-03%20203823.png?raw=true)
 
-    vector<string> algorithms = {"FIFO", "LRU", "CLOCK", "Enhanced CLOCK", "LFU"};
-    vector<int> faults;
+![](https://github.com/markzhang12345/GitHubImage/blob/main/os_lab_5/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE%202025-06-03%20203816.png?raw=true)
 
-    // 保存原始数据
-    int* originalRef = new int[PageNumber];
-    int* originalElim = new int[PageNumber];
-    for (int i = 0; i < PageNumber; i++) {
-        originalRef[i] = ReferencePage[i];
-        originalElim[i] = EliminatePage[i];
-    }
+### 发现的现象
 
-    // 测试每个算法
-    for (int alg = 0; alg < 6; alg++) {
-        // 恢复原始数据
-        for (int i = 0; i < PageNumber; i++) {
-            ReferencePage[i] = originalRef[i];
-            EliminatePage[i] = originalElim[i];
-        }
+#### Belady异常现象
 
-        switch (alg) {
-            case 0:
-                Fifo();
-                break;
-            case 1:
-                Lru();
-                break;
-            case 2:
-                Clock();
-                break;
-            case 3:
-                Eclock();
-                break;
-            case 4:
-                Lfu();
-                break;
-            case 5:
-                Mfu();
-                break;
-        }
+在某些情况下，增加物理帧数反而会增加缺页次数，特别是在FIFO算法中较为明显。
 
-        faults.push_back(FaultNumber);
-    }
+#### 算法性能差异
 
-    delete[] originalRef;
-    delete[] originalElim;
-}
+- **FIFO**: 实现简单但性能不稳定，容易出现Belady异常
+- **LRU**: 性能较好但实现复杂度高
+- **CLOCK**: 性能接近LRU但实现更简单
+- **Enhanced CLOCK**: 考虑修改位，减少不必要的页面写回
+- **LFU/MFU**: 在特定访问模式下表现优异
 
-// 主函数
-int main(int argc, char* argv[]) {
-    Replace* vmpr = new Replace();
+#### 局部性原理验证
 
-    vmpr->CompareAlgorithms();
+具有良好局部性的引用串在所有算法中都表现更好，缺页率显著降低。
 
-    delete vmpr;
-    return 0;
-}
+## 各算法适应性分析
+
+![](https://github.com/markzhang12345/GitHubImage/blob/main/os_lab_5/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE%202025-06-03%20203259.png?raw=true)
+
+### FIFO算法
+
+**适用场景:**
+
+- 实现简单性要求高的系统
+- 内存访问模式相对均匀的应用
+
+**不适用场景:**
+
+- 具有强局部性的应用
+- 对性能要求严格的系统
+
+### LRU算法
+
+**适用场景:**
+
+- 具有时间局部性的应用
+- 对缺页率要求严格的系统
+- 内存充足的环境
+
+**不适用场景:**
+
+- 硬件资源受限的系统
+- 实时性要求极高的应用
+
+### CLOCK算法
+
+**适用场景:**
+
+- 需要在性能和实现复杂度间平衡的系统
+- 大多数通用操作系统
+- 中等规模的应用系统
+
+### Enhanced CLOCK算法
+
+**适用场景:**
+
+- I/O密集型应用
+- 存储系统性能关键的环境
+- 需要考虑页面修改状态的系统
+
+### LFU/MFU算法
+
+**适用场景:**
+
+- 访问模式相对稳定的应用
+- 需要长期统计信息的系统
+- 特定的数据库和缓存系统
+
+## 实验结果综合分析
+
+### 性能排序
+
+在大多数测试场景下的性能排序：
+
+1. Enhanced CLOCK
+2. LRU  
+3. CLOCK
+4. LFU
+5. FIFO
+6. MFU
+
+### 实现复杂度排序
+
+从简单到复杂：
+
+1. FIFO
+2. CLOCK
+3. Enhanced CLOCK
+4. LFU/MFU
+5. LRU
+
+### 内存开销排序
+
+从低到高：
+
+1. FIFO
+2. CLOCK  
+3. Enhanced CLOCK
+4. LRU
+5. LFU/MFU
+
+## Git 记录和上传
+
+执行`git log`代码，得到结果如下图
+
+![](https://github.com/markzhang12345/GitHubImage/blob/main/os_lab_5/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE%202025-06-03%20203521.png?raw=true)
+
+[markzhang12345/os-homework: 大连理工大学操作系统课程作业](https://github.com/markzhang12345/os-homework)
