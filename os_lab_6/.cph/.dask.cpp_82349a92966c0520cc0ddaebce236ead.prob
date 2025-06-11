@@ -1,0 +1,1 @@
+{"name":"Local: dask","url":"d:\\os-homework\\os_lab_6\\dask.cpp","tests":[{"id":1749550062001,"input":"100\n1\n9\n55 58 39 18 90 160 150 38 184","output":""}],"interactive":false,"memoryLimit":1024,"timeLimit":3000,"srcPath":"d:\\os-homework\\os_lab_6\\dask.cpp","group":"local","local":true}
